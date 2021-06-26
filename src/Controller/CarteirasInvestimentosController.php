@@ -142,4 +142,31 @@ class CarteirasInvestimentosController extends AppController
             return $this->redirect(['controller' => 'Pages', 'action' => 'home']);
         }
     }
+
+    public function buscaCarteiras()
+    {
+        $this->request->allowMethod('ajax');
+        $keyword = $this->request->getQuery('keyword');
+
+
+        $session = $this->request->getSession();
+        $idUsuario = $session->read('User.id');
+
+
+
+        if ($keyword != '') {
+            $query = $this->CarteirasInvestimentos->find('all', [
+                'conditions' => ['usuario_id =' =>  $idUsuario, 'nome LIKE' => '%' . $keyword . '%'],
+                'limit' => 100
+            ]);
+
+            $this->set(['carteiras' => $this->paginate($query)]);
+        } else {
+            $this->set(['carteiras' => []]);
+        }
+
+        $this->set('_serialize', ['carteiras']);
+        $this->viewBuilder()->setLayout('ajax');
+        $this->render('resposta_busca_carteiras', 'ajax');
+    }
 }

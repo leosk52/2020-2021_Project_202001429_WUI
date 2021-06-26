@@ -284,12 +284,72 @@ class PortfolioController extends AppController
 
 
     /**
-     * Fronteira method
+     * Comparação method
      *
      * @return \Cake\Http\Response|null|void Renders view
      */
     public function comparacao()
     {
+        $idsCarteiras = $this->request->getQuery('carteiras');
+        $session = $this->request->getSession();
+        $userId = $session->read('User.id');
+
+        $CarteirasInvestimentos = $this->getTableLocator()->get('CarteirasInvestimentos');
+        $carteirasInvestimentos = [];
+        $indicadores = [];
+
+        if ($idsCarteiras) {
+            $ids = json_decode('[' . $idsCarteiras . ']', true);
+
+            $query = $CarteirasInvestimentos->find()->where([
+                'usuario_id' => $userId, 'id IN' => $ids
+            ]);
+
+            $carteirasInvestimentos = $this->paginate($query);
+
+            $IndicadoresCarteiras = $this->getTableLocator()->get('IndicadoresCarteiras');
+            $indicadoresAgrupados = $IndicadoresCarteiras->find()->where(['carteiras_investimento_id IN' => $ids])
+                ->contain(['CarteirasInvestimentos'])
+                ->orderAsc('carteiras_investimento_id')
+                ->orderAsc('data_final')
+                ->groupBy('carteiras_investimento_id');
+
+
+            // echo $indicadores->sql();
+            $rentabilidades = [];
+            $volatilidades = [];
+            $carteiras = [];
+            $retornosRiscos = [];
+            foreach ($indicadoresAgrupados as $idCarteira => $indicadores) {
+                $rentabilidadeCarteira = 0;
+                $desvioPadraoCarteira = 0;
+                foreach ($indicadores as $indicador) {
+                    $data = $indicador->data_final->format('M Y');
+
+                    if (!array_key_exists($data, $rentabilidades)) {
+                        $rentabilidades[$data] = [];
+                    }
+
+                    $rentabilidades[$data][] += $indicador->rentabilidade;
+                    $rentabilidadeCarteira += $indicador->rentabilidade;
+
+                    if (!array_key_exists($data, $volatilidades)) {
+                        $volatilidades[$data] = [];
+                    }
+
+                    $volatilidades[$data][] += $indicador->desvio_padrao;
+                    $desvioPadraoCarteira += $indicador->desvio_padrao;
+                }
+                $nomeCarteira = $indicadores[0]->carteiras_investimento->nome;
+                $carteiras[] = $nomeCarteira;
+                $rentabilidadeCarteira /= count($indicadores);
+                $desvioPadraoCarteira /= count($indicadores);
+                $retornosRiscos[] = ['carteira' =>  $nomeCarteira, 'rentabilidade' => $rentabilidadeCarteira, 'desvio_padrao' => $desvioPadraoCarteira];
+            }
+        }
+
+        $this->set(compact('carteirasInvestimentos'));
+        $this->set(compact('carteiras', 'rentabilidades', 'volatilidades', 'retornosRiscos'));
     }
 
 
@@ -446,5 +506,30 @@ class PortfolioController extends AppController
         }
 
         $this->set(compact('alocacoes'));
+    }
+
+    public function buscaCarteiras()
+    {
+        $this->request->allowMethod('ajax');
+        $CarteirasInvestimentos = $this->getTableLocator()->get('CarteirasInvestimentos');
+        $keyword = $this->request->getQuery('keyword');
+        $session = $this->request->getSession();
+        $userId = $session->read('User.id');
+
+        if ($keyword != '') {
+            $query = $CarteirasInvestimentos->find('all', [
+                'conditions' => ['usuario_id' => $userId, 'nome LIKE' => '%' . $keyword . '%'],
+                'limit' => 10
+            ]);
+        } else {
+            $id = $this->request->getQuery('id');
+            $query = $CarteirasInvestimentos->find('all', [
+                'conditions' => ['usuario_id' => $userId, 'id' => $id]
+            ]);
+        }
+        $this->set('carteiras_encontradas', $this->paginate($query));
+        $this->set('_serialize', ['carteiras_encontradas']);
+        $this->viewBuilder()->setLayout('ajax');
+        $this->render('resposta_busca_carteiras', 'ajax');
     }
 }
