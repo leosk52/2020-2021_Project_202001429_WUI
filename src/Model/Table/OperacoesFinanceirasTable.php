@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Table;
@@ -99,6 +100,21 @@ class OperacoesFinanceirasTable extends Table
             ->date('data')
             ->requirePresence('data', 'create')
             ->notEmptyDate('data');
+
+        $validator
+            ->integer('carteiras_investimento_id')
+            ->requirePresence('carteiras_investimento_id', 'create')
+            ->notEmptyString('carteiras_investimento_id');
+
+        $validator
+            ->integer('cnpj_fundo_id')
+            ->requirePresence('cnpj_fundo_id', 'create')
+            ->notEmptyString('cnpj_fundo_id');
+
+        $validator
+            ->integer('distribuidor_fundo_id')
+            ->requirePresence('distribuidor_fundo_id', 'create')
+            ->notEmptyString('distribuidor_fundo_id');
 
         return $validator;
     }

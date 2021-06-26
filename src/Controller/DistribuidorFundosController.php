@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -101,5 +102,28 @@ class DistribuidorFundosController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    public function ajaxBuscaPorNome()
+    {
+        $this->request->allowMethod('ajax');
+        $DistribuidorFundos = $this->getTableLocator()->get('DistribuidorFundos');
+        $keyword = $this->request->getQuery('keyword');
+        if ($keyword != '') {
+            $query = $DistribuidorFundos->find('all', [
+                'conditions' => ['nome LIKE' => '%' . $keyword . '%'],
+                'order' => ['CNPJ' => 'DESC'],
+                'limit' => 100
+            ]);
+        } else {
+            $id = $this->request->getQuery('id');
+            $query = $DistribuidorFundos->find('all', [
+                'conditions' => ['id' => $id]
+            ]);
+        }
+
+        $this->set(['distribuidores_encontrados' => $this->paginate($query)]);
+        $this->viewBuilder()->setOption('serialize', true);
+        $this->RequestHandler->renderAs($this, 'json');
     }
 }
