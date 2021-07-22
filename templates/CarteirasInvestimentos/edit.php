@@ -11,7 +11,7 @@
             <?= $this->Form->postLink(
                 __('Delete'),
                 ['action' => 'delete', $carteirasInvestimento->id],
-                ['confirm' => __('Are you sure you want to delete # {0}?', $carteirasInvestimento->id), 'class' => 'side-nav-item']
+                ['confirm' => __('Are you sure you want to delete # {0}?', $carteirasInvestimento->nome), 'class' => 'side-nav-item']
             ) ?>
             <?= $this->Html->link(__('List Carteiras Investimentos'), ['action' => 'index'], ['class' => 'side-nav-item']) ?>
         </div>

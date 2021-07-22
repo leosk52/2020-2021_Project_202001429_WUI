@@ -19,7 +19,7 @@
             <h3><?= h($operacoesFinanceira->id) ?></h3>
             <table>
                 <tr>
-                    <th><?= __('Carteiras Investimento') ?></th>
+                    <th><?= __('Carteiras Investimentoaaaaaaaaaaaaaaaaaa') ?></th>
                     <td><?= $operacoesFinanceira->has('carteiras_investimento') ? $this->Html->link($operacoesFinanceira->carteiras_investimento->id, ['controller' => 'CarteirasInvestimentos', 'action' => 'view', $operacoesFinanceira->carteiras_investimento->id]) : '' ?></td>
                 </tr>
                 <tr>
@@ -32,7 +32,7 @@
                 </tr>
                 <tr>
                     <th><?= __('Tipo Operacoes Financeira') ?></th>
-                    <td><?= $operacoesFinanceira->has('tipo_operacoes_financeira') ? $this->Html->link($operacoesFinanceira->tipo_operacoes_financeira->id, ['controller' => 'TipoOperacoesFinanceiras', 'action' => 'view', $operacoesFinanceira->tipo_operacoes_financeira->id]) : '' ?></td>
+                    <td><?= $operacoesFinanceira->has('tipo_operacoes_financeira') ? $this->Html->link($operacoesFinanceira->tipo_operacoes_financeira->nome, ['controller' => 'TipoOperacoesFinanceiras', 'action' => 'view', $operacoesFinanceira->tipo_operacoes_financeira->id]) : '' ?></td>
                 </tr>
                 <tr>
                     <th><?= __('Id') ?></th>

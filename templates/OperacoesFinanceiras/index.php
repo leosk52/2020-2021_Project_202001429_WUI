@@ -31,7 +31,7 @@
                     <td><?= $operacoesFinanceira->has('carteiras_investimento') ? $this->Html->link($operacoesFinanceira->carteiras_investimento->id, ['controller' => 'CarteirasInvestimentos', 'action' => 'view', $operacoesFinanceira->carteiras_investimento->id]) : '' ?></td>
                     <td><?= $operacoesFinanceira->has('cnpj_fundo') ? $this->Html->link($operacoesFinanceira->cnpj_fundo->id, ['controller' => 'CnpjFundos', 'action' => 'view', $operacoesFinanceira->cnpj_fundo->id]) : '' ?></td>
                     <td><?= $operacoesFinanceira->has('distribuidor_fundo') ? $this->Html->link($operacoesFinanceira->distribuidor_fundo->id, ['controller' => 'DistribuidorFundos', 'action' => 'view', $operacoesFinanceira->distribuidor_fundo->id]) : '' ?></td>
-                    <td><?= $operacoesFinanceira->has('tipo_operacoes_financeira') ? $this->Html->link($operacoesFinanceira->tipo_operacoes_financeira->id, ['controller' => 'TipoOperacoesFinanceiras', 'action' => 'view', $operacoesFinanceira->tipo_operacoes_financeira->id]) : '' ?></td>
+                    <td><?= $operacoesFinanceira->has('tipo_operacoes_financeira') ? $this->Html->link($operacoesFinanceira->tipo_operacoes_financeira->nome, ['controller' => 'TipoOperacoesFinanceiras', 'action' => 'view', $operacoesFinanceira->tipo_operacoes_financeira->id]) : '' ?></td>
                     <td><?= h($operacoesFinanceira->por_valor) ?></td>
                     <td><?= $this->Number->format($operacoesFinanceira->valor_total) ?></td>
                     <td><?= $this->Number->format($operacoesFinanceira->valor_cota) ?></td>

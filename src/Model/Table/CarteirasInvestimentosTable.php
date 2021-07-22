@@ -42,7 +42,7 @@ class CarteirasInvestimentosTable extends Table
         parent::initialize($config);
 
         $this->setTable('carteiras_investimentos');
-        $this->setDisplayField('id');
+        $this->setDisplayField('nome');
         $this->setPrimaryKey('id');
 
         $this->belongsTo('Usuarios', [

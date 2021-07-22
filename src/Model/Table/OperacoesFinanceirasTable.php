@@ -61,6 +61,9 @@ class OperacoesFinanceirasTable extends Table
             'foreignKey' => 'tipo_operacoes_financeira_id',
             'joinType' => 'INNER',
         ]);
+        $this->hasMany('RelCarteirasOperacoes', [
+            'foreignKey' => 'operacoes_financeira_id',
+        ]);
     }
 
     /**
