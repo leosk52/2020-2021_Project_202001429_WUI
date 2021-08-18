@@ -7,6 +7,7 @@
 			data: {id: data},
 
 			success: function (response) {
+				$('.cnpj_fundo_id').html(data),
 				$('.resultado_busca').html(response);
 			}
 		});

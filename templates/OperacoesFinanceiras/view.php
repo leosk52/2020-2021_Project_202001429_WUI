@@ -19,7 +19,7 @@
             <h3><?= h($operacoesFinanceira->id) ?></h3>
             <table>
                 <tr>
-                    <th><?= __('Carteiras Investimentoaaaaaaaaaaaaaaaaaa') ?></th>
+                    <th><?= __('Carteiras Investimento') ?></th>
                     <td><?= $operacoesFinanceira->has('carteiras_investimento') ? $this->Html->link($operacoesFinanceira->carteiras_investimento->id, ['controller' => 'CarteirasInvestimentos', 'action' => 'view', $operacoesFinanceira->carteiras_investimento->id]) : '' ?></td>
                 </tr>
                 <tr>

@@ -4,6 +4,29 @@
  * @var \App\Model\Entity\OperacoesFinanceira $operacoesFinanceira
  */
 ?>
+
+<script>
+	$('document').ready(function () {
+		$('#nome-ou-cnpj-fundo-busca').keyup(function () {
+			var searchkey = $(this).val();
+            searchFundos(searchkey);            
+		});
+
+		function searchFundos(keyword) {
+			var data = keyword;
+			$.ajax({
+				method: 'get',
+				url: "<?php echo $this->Url->build(['controller' => 'Fundos', 'action' => 'Ajaxsearch']); ?>",
+				data: {keyword: data},
+
+				success: function (response) {
+					$('.resultado_busca').html(response);
+				}
+			});
+		};
+	});
+</script>
+
 <div class="row">
     <aside class="column">
         <div class="side-nav">
@@ -20,10 +43,16 @@
         <div class="operacoesFinanceiras form content">
             <?= $this->Form->create($operacoesFinanceira) ?>
             <fieldset>
-                <legend><?= __('Edit Operacoes Financeira') ?></legend>
+                <?php
+                    echo $this->Form->control('nome_ou_cnpj_fundo_busca', ['label' => __('Nome do fundo para busca'), 'type' => 'text']);
+                ?>
+                <div class="resultado_busca"></div>
+                <div class="cnpj_fundo_id"></div>
+                
+                <legend><?= __('Edite suas Operacoes Financeiras') ?></legend>
                 <?php
                     echo $this->Form->control('carteiras_investimento_id', ['options' => $carteirasInvestimentos]);
-                    echo $this->Form->control('cnpj_fundo_id', ['options' => $cnpjFundos]);
+                    echo $this->Form->control('cnpj_fundo_id', ['type' => 'text']);
                     echo $this->Form->control('distribuidor_fundo_id', ['options' => $distribuidorFundos, 'empty' => true]);
                     echo $this->Form->control('tipo_operacoes_financeira_id', ['options' => $tipoOperacoesFinanceiras]);
                     echo $this->Form->control('por_valor');

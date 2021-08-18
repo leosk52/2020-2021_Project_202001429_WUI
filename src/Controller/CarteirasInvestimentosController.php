@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\CnpjFundo;
+use DateTime;
+use DatePeriod;
+use DateInterval;
+
 /**
  * CarteirasInvestimentos Controller
  *
@@ -27,6 +32,7 @@ class CarteirasInvestimentosController extends AppController {
 		$this->set(compact('carteirasInvestimentos', 'userName'));
 	}
 
+	
 	/**
 	 * View method
 	 *
@@ -40,6 +46,75 @@ class CarteirasInvestimentosController extends AppController {
 		]);
 
 		$this->set(compact('carteirasInvestimento'));
+		
+		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all');
+		$this->set(compact('operacoes'));
+
+		// Calcula patrimonio total de uma carteira e dos fundos individuais
+		$patrimonio = 0;
+		$data[] = "['Fundo Id', 'Patrimonio Total do Fundo'],";
+		$id_fundo_unique = array();
+		$patrimonios[][] = "['Fundo id']['Data fundo'],";
+
+		
+		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
+			$patrimonio += $operacoes->valor_total;
+			$data[$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
+			$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
+		endforeach;
+		$id_fundo_unique = array_unique($id_fundo_unique);
+		
+		// fim
+
+		// pega todas datas desde a primeira operacao até o dia atual
+		$first_data = new DateTime('01/01/2100');
+		$first_data->format('Y-m-d');
+		$data_list = array();
+		$aux_data = $first_data->getTimestamp();
+		$datasDaCarteira = array();
+
+		// 10 5 7 8 9  999999999
+		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
+			$lowest_data = $operacoes->data->getTimestamp();
+			$datasDaCarteira[] = $operacoes->data;
+			if ($lowest_data < $aux_data) :
+				$aux_data = $lowest_data;
+				$var_aux = $operacoes->data;
+			endif;		
+		endforeach;
+
+		sort($datasDaCarteira); // datas da carteira ordenadas asc
+		$datasDaCarteira = array_unique($datasDaCarteira);
+
+		$primeira_data = date('Y/m/d', $var_aux->getTimestamp());
+		$segunda_data = date('Y/m/d');
+		$data_auxiliar = $primeira_data;
+
+		while (strtotime($primeira_data) < strtotime($segunda_data)) :
+			$data_list[] = date('d/m/Y', strtotime($primeira_data));
+			$primeira_data = date('Y/m/d', strtotime("$primeira_data +1 day"));			
+		endwhile;
+
+
+		$patrimonioTest = [];
+		//$patrimonio_Total = 0;
+		$data_anterior = 0;
+		
+		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
+			$auxiliar_data = (string) $operacoes->data;
+			$patrimonioTest[$auxiliar_data][$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
+
+			$data_anterior = $auxiliar_data;
+		endforeach;
+		
+		
+
+		$this->set(compact('patrimonio', 'data', 'id_fundo_unique', 'patrimonios', 'first_data', 'data_list', 'var_aux', 'data_auxiliar',
+		 'patrimonioTest','datasDaCarteira', 'patrimonio_Total'));
+		
+		
+
+		
 		/*
 		$this->paginate = [
 			'contain' => ['CarteirasInvestimentos', 'CnpjFundos', 'DistribuidorFundos', 'TipoOperacoesFinanceiras'],
@@ -49,6 +124,7 @@ class CarteirasInvestimentosController extends AppController {
 		$this->set(compact('operacoesFinanceiras'));
 		 *
 		 */
+		$this->set((compact('IndicadoresCarteiras')));
 	}
 
 	/**

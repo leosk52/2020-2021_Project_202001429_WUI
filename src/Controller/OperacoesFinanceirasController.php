@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use function React\Promise\all;
+
 /**
  * OperacoesFinanceiras Controller
  *
@@ -52,6 +54,10 @@ class OperacoesFinanceirasController extends AppController
         $operacoesFinanceira = $this->OperacoesFinanceiras->newEmptyEntity();
         if ($this->request->is('post')) {
             $operacoesFinanceira = $this->OperacoesFinanceiras->patchEntity($operacoesFinanceira, $this->request->getData());
+            
+            //var_dump($operacoesFinanceira);
+            //exit();
+
             if ($this->OperacoesFinanceiras->save($operacoesFinanceira)) {
                 $this->Flash->success(__('The operacoes financeira has been saved.'));
 
@@ -60,7 +66,7 @@ class OperacoesFinanceirasController extends AppController
             $this->Flash->error(__('The operacoes financeira could not be saved. Please, try again.'));
         }
         $carteirasInvestimentos = $this->OperacoesFinanceiras->CarteirasInvestimentos->find('list', ['limit' => 200]);
-        $cnpjFundos = $this->OperacoesFinanceiras->CnpjFundos->find('list', ['limit' => 200]);
+        //$cnpjFundos = $this->OperacoesFinanceiras->CnpjFundos->find('list', ['limit' => 200]);
         $distribuidorFundos = $this->OperacoesFinanceiras->DistribuidorFundos->find('list', ['limit' => 200]);
         $tipoOperacoesFinanceiras = $this->OperacoesFinanceiras->TipoOperacoesFinanceiras->find('list', ['limit' => 200]);
         $this->set(compact('operacoesFinanceira', 'carteirasInvestimentos', 'cnpjFundos', 'distribuidorFundos', 'tipoOperacoesFinanceiras'));
