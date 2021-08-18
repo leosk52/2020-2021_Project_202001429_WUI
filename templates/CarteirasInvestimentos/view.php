@@ -120,7 +120,7 @@
 						*/
 						$valorReal = [];
 						$aux = 0;
-						$test = 0;
+						// JUST TO UPDATE GIT CORRECTLY
 						foreach ($data_list as $data) {
 							foreach ($patrimonioTest[(string)$data] as $fundoId => $patrimonio) {
 								//$valorReal[$fundoId] += $patrimonio;
