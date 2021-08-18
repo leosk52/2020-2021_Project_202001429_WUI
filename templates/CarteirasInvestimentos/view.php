@@ -81,26 +81,7 @@
 				<?php endif; ?>
             </div>
 			
-			<div class="related">
-                <h4><?= __('Testes em andamento') ?></h4>
 				<table>
-					
-				<tr>
-                    <th><?= __('Patrimônio') ?></th>
-                    <td><?= h($patrimonio) ?></td>
-                </tr>
-				<?php foreach ($id_fundo_unique as $value) : ?>
-		            <tr>
-						<td><?= h("Fundo " . $value . ", Patrimônio Total " . $data[$value]); ?></td>
-					</tr>
-				<?php endforeach; ?>
-
-				<?php foreach ($datasDaCarteira as $value) : ?>
-		            <tr>
-						<td><?= h("Datas : " . $value); ?></td>
-					</tr>
-				<?php endforeach; ?>
-
 				<div class="related">
 				<h3><?= __('Gráficos') ?></h3>
 				<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -110,30 +91,8 @@
 						<?php
 						echo$this->element('titleInfo', array('title' => __('Patrimônio Líquido'), 'align' => 'center', 'tam' => 4, 'info' => __('O patrimônio líquido é 
 						a quantidade de recursos...')));
-						$exibe = array();
-						$exibe[] = "['Data', 'Patrimônio Líquido Total'],";
-						/*
-						foreach ($id_fundo_unique as $fundoId) {
-							$exibe[0] += $fundoId. ",";
-						}
-						$exibe[0] += "]";
-						*/
-						$valorReal = [];
-						$aux = 0;
-						// JUST TO UPDATE GIT CORRECTLY
-						foreach ($data_list as $data) {
-							foreach ($patrimonioTest[(string)$data] as $fundoId => $patrimonio) {
-								//$valorReal[$fundoId] += $patrimonio;
-								$valorReal["total"] += $patrimonio;
-								//$aux = $fundoId;
-							}
-							//$exibe[] = "['" . (string)$data . "'," . $valorReal["total"] . $valorReal[$aux] . ",";
-							$exibe[] = "['" . (string)$data . "'," . $valorReal["total"] . "],";
-							//foreach ($id_fundo_unique as $fundoId) {
-								// $exibe[count($exibe)-1] += $valorReal[$fundoId] . ",";
-							//}
-						}			
-							
+						
+						
 						echo$this->element('googleChartFundo', array('data' => $exibe, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
 						//echo var_dump($valorReal);	
 						?>

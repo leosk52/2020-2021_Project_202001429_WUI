@@ -32,6 +32,30 @@ class CarteirasInvestimentosController extends AppController {
 		$this->set(compact('carteirasInvestimentos', 'userName'));
 	}
 
+	public function calcula_datas_carteira($carteirasInvestimento) {
+		// pega todas datas desde a primeira operacao até o dia atual
+		$first_data = new DateTime('01/01/2100');
+		$first_data->format('Y-m-d');
+		$data_list = array();
+		$datasDaCarteira = array();
+
+		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
+			$datasDaCarteira[] = $operacoes->data;
+		endforeach;
+
+		sort($datasDaCarteira); // datas da carteira ordenadas asc
+		$datasDaCarteira = array_unique($datasDaCarteira);
+		
+		$primeira_data = date('Y/m/d', $datasDaCarteira[0]->getTimestamp());
+		$segunda_data = date('Y/m/d');
+
+		while (strtotime($primeira_data) < strtotime($segunda_data)) :
+			$data_list[] = date('d/m/Y', strtotime($primeira_data));
+			$primeira_data = date('Y/m/d', strtotime("$primeira_data +1 day"));			
+		endwhile;
+
+		return $data_list;
+	}
 	
 	/**
 	 * View method
@@ -51,66 +75,51 @@ class CarteirasInvestimentosController extends AppController {
 		$this->set(compact('operacoes'));
 
 		// Calcula patrimonio total de uma carteira e dos fundos individuais
-		$patrimonio = 0;
-		$data[] = "['Fundo Id', 'Patrimonio Total do Fundo'],";
-		$id_fundo_unique = array();
-		$patrimonios[][] = "['Fundo id']['Data fundo'],";
-
-		
-		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
-			$patrimonio += $operacoes->valor_total;
-			$data[$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
-			$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
-		endforeach;
-		$id_fundo_unique = array_unique($id_fundo_unique);
-		
-		// fim
-
-		// pega todas datas desde a primeira operacao até o dia atual
-		$first_data = new DateTime('01/01/2100');
-		$first_data->format('Y-m-d');
-		$data_list = array();
-		$aux_data = $first_data->getTimestamp();
-		$datasDaCarteira = array();
-
-		// 10 5 7 8 9  999999999
-		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
-			$lowest_data = $operacoes->data->getTimestamp();
-			$datasDaCarteira[] = $operacoes->data;
-			if ($lowest_data < $aux_data) :
-				$aux_data = $lowest_data;
-				$var_aux = $operacoes->data;
-			endif;		
-		endforeach;
-
-		sort($datasDaCarteira); // datas da carteira ordenadas asc
-		$datasDaCarteira = array_unique($datasDaCarteira);
-
-		$primeira_data = date('Y/m/d', $var_aux->getTimestamp());
-		$segunda_data = date('Y/m/d');
-		$data_auxiliar = $primeira_data;
-
-		while (strtotime($primeira_data) < strtotime($segunda_data)) :
-			$data_list[] = date('d/m/Y', strtotime($primeira_data));
-			$primeira_data = date('Y/m/d', strtotime("$primeira_data +1 day"));			
-		endwhile;
-
-
-		$patrimonioTest = [];
-		//$patrimonio_Total = 0;
+		$patrimonio_por_fundo = array(); //patrimonio[fundo] = valorTotalPorFundo
+		$id_fundo_unique = array();	
+		$patrimonio_total = [];
 		$data_anterior = 0;
 		
 		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
 			$auxiliar_data = (string) $operacoes->data;
-			$patrimonioTest[$auxiliar_data][$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
+
+			$patrimonio_total[$auxiliar_data][$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
+			
+			$patrimonio_por_fundo[$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
+
+			$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
 
 			$data_anterior = $auxiliar_data;
 		endforeach;
-		
-		
 
-		$this->set(compact('patrimonio', 'data', 'id_fundo_unique', 'patrimonios', 'first_data', 'data_list', 'var_aux', 'data_auxiliar',
-		 'patrimonioTest','datasDaCarteira', 'patrimonio_Total'));
+		$id_fundo_unique = array_unique($id_fundo_unique);		
+		
+		$exibe = array();
+		$exibe[] = "['Data', 'Patrimônio Líquido Total'],";
+
+		/*
+		foreach ($id_fundo_unique as $fundoId) {
+			$exibe[0] += $fundoId. ",";
+		}
+		$exibe[0] += "]";
+		*/
+		$valorReal = [];
+		$dataQueVouUsar = $this->calcula_datas_carteira($carteirasInvestimento);
+		// JUST TO UPDATE GIT CORRECTLY
+		foreach ($dataQueVouUsar as $data) {
+			foreach ($patrimonio_total[(string)$data] as $fundoId => $patrimonio) {
+				//$valorReal[$fundoId] += $patrimonio;
+				$valorReal["total"] += $patrimonio;
+				//$aux = $fundoId;
+			}
+			//$exibe[] = "['" . (string)$data . "'," . $valorReal["total"] . $valorReal[$aux] . ",";
+			$exibe[] = "['" . (string)$data . "'," . $valorReal["total"] . "],";
+			//foreach ($id_fundo_unique as $fundoId) {
+				// $exibe[count($exibe)-1] += $valorReal[$fundoId] . ",";
+			//}
+		}	
+		
+		$this->set(compact('exibe'));
 		
 		
 
