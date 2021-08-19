@@ -3,6 +3,9 @@
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\CarteirasInvestimento $carteirasInvestimento
  */
+
+use Phinx\Db\Action\AddColumn;
+
 ?>
 <div class="row">
     <!--<aside class="column">
@@ -91,9 +94,9 @@
 							<div class="column-graph">
 								<?php
 								echo$this->element('titleInfo', array('title' => __('Patrimônio Líquido'), 'align' => 'center', 'tam' => 4, 'info' => __('O patrimônio líquido é 
-								a quantidade de recursos...')));						
-								
-								echo$this->element('googleChartFundo', array('data' => $exibe, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
+								a quantidade de recursos...')));	
+
+								echo$this->element('googleChartFundo', array('data' => $exibeTudo, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
 								?>
 								<div id="chart1_div" style="width: 100%; height: 400px;"></div>
 							</div>

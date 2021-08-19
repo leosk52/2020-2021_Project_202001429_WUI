@@ -100,7 +100,7 @@ class CarteirasInvestimentosController extends AppController {
 		
 		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
 
-			//$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
+			$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
 
 			$auxiliar_data = (string) $operacoes->data;
 
@@ -117,34 +117,67 @@ class CarteirasInvestimentosController extends AppController {
 
 		endforeach;
 
-		//$id_fundo_unique = array_unique($id_fundo_unique);		
+		$id_fundo_unique = array_unique($id_fundo_unique);	
 		
-		$exibe = array();
-		$exibe[] = "['Data', 'Patrimônio Líquido Total'],";
-		//$exibe2 = array();
-		//$exibe2[] = "['Data', 'Patrimônio Líquido Total'],";
-
-		/*
+		$patrimonio_view_fundo = [];		
+		
+		$exibe = array("['Data', 'Patrimônio Líquido Total', ");
 		foreach ($id_fundo_unique as $fundoId) {
-			$exibe[0] += $fundoId. ",";
+			$patrimonio_view_fundo[$fundoId] = 0;
+			$exibe[] = $exibe[count($exibe)-1] . "'Fundo " . (string) $fundoId . "', ";
 		}
-		$exibe[0] += "]";
-		*/
-		$patrimonio_view = [];
 
+		$exibeTudo[] = $exibe[count($exibe)-1] . "],";
+		//var_dump($exibeTudo);
+		//$exibe = array_unique($exibe);
+		//$exibe[] = "['Data', 'Patrimônio Líquido Total', $fundoAAA],";
+		//$exibe = array("['Data', 'Patrimônio Líquido Total', 'fundo1', 'fundo2', 'fundo3', 'fundo4', 'fundo5', 'fundo6', 'fundo7', 'fundo8', ],");
+		//var_dump($exibe);
+		//$tam = count($patrimonio_view_fundo);
+		//$exibe = array("['Data', 'Patrimônio Líquido Total', $tam, ],");
+		//$exibe2 = array();
+
+		$patrimonio_view = [];
+		$aux = 0;
 		foreach ($dataQueVouUsar as $data) {
 			foreach ($patrimonio_total[(string)$data] as $fundoId => $patrimonio) {
-				//var_dump($patrimonio);
-				//$patrimonio_view[$fundoId] += $patrimonio;
-				$patrimonio_view["total"] += $patrimonio;
 				//$aux = $fundoId;
+				$patrimonio_view_fundo[$fundoId] += $patrimonio; //patrimonio[38733] = 
+				$patrimonio_view["total"] += $patrimonio;
 			}
-			//$exibe[] = "['" . (string)$data . "'," . $patrimonio_view["total"] . $patrimonio_view[$aux] . ",";
-			$exibe[] = "['" . (string)$data . "'," . $patrimonio_view["total"] . "],";
-			//foreach ($id_fundo_unique as $fundoId) {
-				// $exibe[count($exibe)-1] += $patrimonio_view[$fundoId] . ",";
-			//}
+			$exibeTudo[] = "['" . (string)$data . "', " . $patrimonio_view["total"];
+
+			foreach ($id_fundo_unique as $fundo) {
+				// concatenar virgula e o valor do fundo na ultima linha do exibe
+				$exibeTudo[count($exibeTudo) - 1] = $exibeTudo[count($exibeTudo) - 1] . ", " . $patrimonio_view_fundo[$fundo];
+			}
+			$exibeTudo[count($exibeTudo) - 1] = $exibeTudo[count($exibeTudo) - 1] . "],";
 		}
+
+		//var_dump($exibe);
+
+
+
+		/*
+		$patrimonio_view = [];
+		$exibe_fundo = [];
+		$aux = 0;
+		foreach ($dataQueVouUsar as $data) {
+			foreach ($patrimonio_total[(string)$data] as $fundoId => $patrimonio) {
+				$aux = $fundoId;
+				$patrimonio_view_fundo[$fundoId] += $patrimonio; //patrimonio[38733] = 
+				$patrimonio_view["total"] += $patrimonio;
+			}
+			$exibe[] = "['" . (string)$data . "', " . $patrimonio_view["total"] . ",";
+
+			foreach ($id_fundo_unique as $fundo) {
+				// concatenar virgula e o valor do fundo na ultima linha do exibe
+				$exibe[count($exibe) - 1] = $exibe[count($exibe) - 1] . " [" . $patrimonio_view_fundo[$fundo] . "],";
+			}
+		}
+		*/
+		
+		//var_dump($array_de_fundos);
 
 		/*
 		$valorDif = [];
@@ -164,7 +197,7 @@ class CarteirasInvestimentosController extends AppController {
 		}
 		*/
 		
-		$this->set(compact('exibe', 'exibe2'));
+		$this->set(compact('exibe', 'exibe2', 'id_fundo_unique', 'exibeTudo'));
 		
 		
 
