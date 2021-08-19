@@ -81,27 +81,39 @@
 				<?php endif; ?>
             </div>
 			
-				<table>
-				<div class="related">
-				<h3><?= __('Gráficos') ?></h3>
-				<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+			<div class="table-responsive">
+	            <table>
+					<div class="related">
+						<h3><?= __('Gráficos') ?></h3>
+						<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
-				<div class="row">
-					<div class="column-graph">
-						<?php
-						echo$this->element('titleInfo', array('title' => __('Patrimônio Líquido'), 'align' => 'center', 'tam' => 4, 'info' => __('O patrimônio líquido é 
-						a quantidade de recursos...')));
-						
-						
-						echo$this->element('googleChartFundo', array('data' => $exibe, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
-						//echo var_dump($valorReal);	
-						?>
-						<div id="chart1_div" style="width: 100%; height: 400px;"></div>
+						<div class="row">
+							<div class="column-graph">
+								<?php
+								echo$this->element('titleInfo', array('title' => __('Patrimônio Líquido'), 'align' => 'center', 'tam' => 4, 'info' => __('O patrimônio líquido é 
+								a quantidade de recursos...')));						
+								
+								echo$this->element('googleChartFundo', array('data' => $exibe, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
+								?>
+								<div id="chart1_div" style="width: 100%; height: 400px;"></div>
+							</div>
+							
+							<div class="column-graph">
+								<?php
+								/*
+								echo$this->element('titleInfo', array('title' => __('Rentabilidade'), 'align' => 'center', 'tam' => 4, 'info' => __('O patrimônio líquido é 
+								a quantidade de recursos...')));						
+								
+								echo$this->element('googleChartFundo', array('data' => $exibe2, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
+								*/
+								?>
+								
+								<div id="chart1_div" style="width: 100%; height: 400px;"></div>
+							</div>
+						</div>
 					</div>
-				</div>
 				</table>
 			</div>
-
 			
             <div class="related">
                 <h4><?= __('Indicadores Financeiros da Carteira') ?></h4>

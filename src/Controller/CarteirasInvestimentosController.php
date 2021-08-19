@@ -8,6 +8,7 @@ use App\Model\Entity\CnpjFundo;
 use DateTime;
 use DatePeriod;
 use DateInterval;
+use Cake\ORM\TableRegistry;
 
 /**
  * CarteirasInvestimentos Controller
@@ -74,28 +75,54 @@ class CarteirasInvestimentosController extends AppController {
 		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all');
 		$this->set(compact('operacoes'));
 
+		// nao ha operacoes na carteira
+		if (sizeof($carteirasInvestimento->operacoes_financeiras) == 0) {
+			return;
+		}
+		
+		$busca_tipo_operacao = $this->CarteirasInvestimentos->OperacoesFinanceiras->TipoOperacoesFinanceiras->find('all');
+		// saber qual tipo de operacao para somar/subtrair no patrimonio total // mudar o retorno, atual = bool
+		//$busca_tipo_operacao = TableRegistry::getTableLocator()->get('TipoOperacoesFinanceiras')->find('all');
+		//var_dump($busca_tipo_operacao);
+		foreach ($busca_tipo_operacao as $tipo_operacao) {
+			$tipo_de_operacao[$tipo_operacao['id']] = $tipo_operacao['is_aplicacao'];
+		}
+
+		//var_dump($tipo_de_operacao);
+
 		// Calcula patrimonio total de uma carteira e dos fundos individuais
 		$patrimonio_por_fundo = array(); //patrimonio[fundo] = valorTotalPorFundo
 		$id_fundo_unique = array();	
 		$patrimonio_total = [];
 		$data_anterior = 0;
 		
+		$dataQueVouUsar = $this->calcula_datas_carteira($carteirasInvestimento);
+		
 		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
+
+			//$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
+
 			$auxiliar_data = (string) $operacoes->data;
 
-			$patrimonio_total[$auxiliar_data][$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
+			// se a operacao eh de deposito acrescenta, outros tipos diminui
+			if ($tipo_de_operacao[$operacoes['tipo_operacoes_financeira_id']] == 1) {
+				$patrimonio_total[$auxiliar_data][$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
+			} else {
+				$patrimonio_total[$auxiliar_data][$operacoes->cnpj_fundo_id] -= $operacoes["valor_total"];
+			}
 			
-			$patrimonio_por_fundo[$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
-
-			$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
+			//$patrimonio_por_fundo[$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
 
 			$data_anterior = $auxiliar_data;
+
 		endforeach;
 
-		$id_fundo_unique = array_unique($id_fundo_unique);		
+		//$id_fundo_unique = array_unique($id_fundo_unique);		
 		
 		$exibe = array();
 		$exibe[] = "['Data', 'Patrimônio Líquido Total'],";
+		//$exibe2 = array();
+		//$exibe2[] = "['Data', 'Patrimônio Líquido Total'],";
 
 		/*
 		foreach ($id_fundo_unique as $fundoId) {
@@ -103,23 +130,41 @@ class CarteirasInvestimentosController extends AppController {
 		}
 		$exibe[0] += "]";
 		*/
-		$valorReal = [];
-		$dataQueVouUsar = $this->calcula_datas_carteira($carteirasInvestimento);
-		// JUST TO UPDATE GIT CORRECTLY
+		$patrimonio_view = [];
+
 		foreach ($dataQueVouUsar as $data) {
 			foreach ($patrimonio_total[(string)$data] as $fundoId => $patrimonio) {
-				//$valorReal[$fundoId] += $patrimonio;
-				$valorReal["total"] += $patrimonio;
+				//var_dump($patrimonio);
+				//$patrimonio_view[$fundoId] += $patrimonio;
+				$patrimonio_view["total"] += $patrimonio;
 				//$aux = $fundoId;
 			}
-			//$exibe[] = "['" . (string)$data . "'," . $valorReal["total"] . $valorReal[$aux] . ",";
-			$exibe[] = "['" . (string)$data . "'," . $valorReal["total"] . "],";
+			//$exibe[] = "['" . (string)$data . "'," . $patrimonio_view["total"] . $patrimonio_view[$aux] . ",";
+			$exibe[] = "['" . (string)$data . "'," . $patrimonio_view["total"] . "],";
 			//foreach ($id_fundo_unique as $fundoId) {
-				// $exibe[count($exibe)-1] += $valorReal[$fundoId] . ",";
+				// $exibe[count($exibe)-1] += $patrimonio_view[$fundoId] . ",";
 			//}
-		}	
+		}
+
+		/*
+		$valorDif = [];
+		foreach ($dataQueVouUsar as $data) {
+			foreach ($rentab_data_fundo[$data] as $fundoId => $rentab) {
+				var_dump($rentab);
+				//$patrimonio_view[$fundoId] += $patrimonio;
+				$valorDif["total"] += $rentab;
+				//$aux = $fundoId;
+			}
+			//$exibe[] = "['" . (string)$data . "'," . $patrimonio_view["total"] . $patrimonio_view[$aux] . ",";
+			$exibe2[] = "['" . (string)$data . "'," . $valorDif["total"] . "],";
+			//var_dump($exibe2);
+			//foreach ($id_fundo_unique as $fundoId) {
+				// $exibe[count($exibe)-1] += $patrimonio_view[$fundoId] . ",";
+			//}
+		}
+		*/
 		
-		$this->set(compact('exibe'));
+		$this->set(compact('exibe', 'exibe2'));
 		
 		
 
