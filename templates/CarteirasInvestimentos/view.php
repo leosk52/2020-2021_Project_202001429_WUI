@@ -93,16 +93,32 @@ use Phinx\Db\Action\AddColumn;
 						<div class="row">
 							<div class="column-graph">
 								<?php
-								echo$this->element('titleInfo', array('title' => __('Patrimônio Líquido'), 'align' => 'center', 'tam' => 4, 'info' => __('O patrimônio líquido é 
-								a quantidade de recursos...')));	
+								echo$this->element('titleInfo', array('title' => __('Patrimônio Líquido'), 'align' => 'center', 'h' => 3, 'info' => __('O patrimônio líquido é a quantidade de recursos...')));
+							
+								$exibe = array("['Data', 'Patrimônio Líquido Total', ");
+								foreach ($id_fundo_unique as $fundo_id) {
+									$exibe[] = $exibe[count($exibe)-1] . "'Fundo " . (string) $fundo_id . "', ";
+								}
+								$exibeTudo[] = $exibe[count($exibe)-1] . "],";
+								
+								foreach ($datas_totais as $data) {
+									$exibeTudo[] = "['" . (string)$data . "', " . $patrimonio_total_view[$data]["total"];
+									$tamanho = count($exibeTudo) - 1;
+									foreach ($id_fundo_unique as $fundo_id) {
+										$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . ", " . $patrimonio_fundo_view[$data][$fundo_id];
+									}
+									$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . "],";
+								}
 
 								echo$this->element('googleChartFundo', array('data' => $exibeTudo, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
 								?>
-								<div id="chart1_div" style="width: 100%; height: 400px;"></div>
-							</div>
+							<div id="chart1_div" style="width: 100%; height: 400px;"></div>
+						</div>
+
+
 							
-							<div class="column-graph">
-								<?php
+							<!--div class="column-graph">
+								<!?php
 								/*
 								echo$this->element('titleInfo', array('title' => __('Rentabilidade'), 'align' => 'center', 'tam' => 4, 'info' => __('O patrimônio líquido é 
 								a quantidade de recursos...')));						
@@ -113,7 +129,7 @@ use Phinx\Db\Action\AddColumn;
 								
 								<div id="chart1_div" style="width: 100%; height: 400px;"></div>
 							</div>
-						</div>
+						</div-->
 					</div>
 				</table>
 			</div>
