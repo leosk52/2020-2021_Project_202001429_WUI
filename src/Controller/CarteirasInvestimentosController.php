@@ -35,8 +35,8 @@ class CarteirasInvestimentosController extends AppController {
 		// pega todas datas desde a primeira operacao até o dia atual
 		$first_data = new DateTime('01/01/2100');
 		$first_data->format('Y-m-d');
-		$data_list = array();
-		$datasDaCarteira = array();
+		$data_list = [];
+		$datasDaCarteira = [];
 		
 		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
 			$datasDaCarteira[] = $operacoes->data;
@@ -47,6 +47,7 @@ class CarteirasInvestimentosController extends AppController {
 		
 		$primeira_data = date('Y/m/d', $datasDaCarteira[0]->getTimestamp());
 		$segunda_data = date('Y/m/d');
+
 
 		while (strtotime($primeira_data) < strtotime($segunda_data)) :
 			$data_list[] = date('d/m/Y', strtotime($primeira_data));
@@ -65,6 +66,7 @@ class CarteirasInvestimentosController extends AppController {
 		return $datasDaCarteira[0];
 	}
 	
+	
 	/**
 	 * View method
 	 *
@@ -77,8 +79,8 @@ class CarteirasInvestimentosController extends AppController {
 			'contain' => ['Usuarios', 'IndicadoresCarteiras', 'OperacoesFinanceiras'=>['CnpjFundos', 'DistribuidorFundos', 'TipoOperacoesFinanceiras']],
 		]);
 
-		var_dump($carteirasInvestimento->id);
-		$this->set(compact('carteirasInvestimento'));
+		//var_dump($carteirasInvestimento->id);
+		//$this->set(compact('carteirasInvestimento'));
 		
 		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all');
 		//$this->set(compact('operacoes'));
@@ -97,8 +99,7 @@ class CarteirasInvestimentosController extends AppController {
 		}
 
 		// Calcula patrimonio total de uma carteira e dos fundos individuais
-		$patrimonio_por_fundo = array(); //patrimonio[fundo] = valorTotalPorFundo
-		$id_fundo_unique = array();	
+		$id_fundo_unique = [];	
 		$balanco_fundo = [];
 				
 		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
@@ -115,8 +116,6 @@ class CarteirasInvestimentosController extends AppController {
 			} else {
 				$balanco_fundo[$auxiliar_data][$auxiliar_fundo] -= $valor_total;
 			}
-			
-			//$patrimonio_por_fundo[$operacoes->cnpj_fundo_id] += $operacoes["valor_total"];
 
 		endforeach;
 
@@ -139,18 +138,24 @@ class CarteirasInvestimentosController extends AppController {
 		// fors pra exibir os valores no grafico patrimonio
 		$patrimonio_total_view = [];
 		$patrimonio_fundo_view = [];
-		$aux = 0;
-		$soma_total = 0;
+		$drawdown = [];
 		$data_anterior = '';
 
 		foreach ($datas_totais as $data) {
 			$soma_fundos = 0;
+			$soma_drawdown_fundo = 0;
 			foreach ($id_fundo_unique as $fundo_id) {
 
 				$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id]; // rend =500 * 0.053942641160
 				//var_dump($rendimento_dia);
 				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia; //$patrimonio_dia_anterior; // 5000, 5000 + (5000*0.00005)
 				//var_dump($balanco_fundo[$data][$fundo_id]);
+
+				if ($balanco_fundo[$data][$fundo_id] < $balanco_fundo[$data_anterior][$fundo_id]) {
+					$drawdown[$data][$fundo_id] = ($balanco_fundo[$data_anterior][$fundo_id] - $balanco_fundo[$data][$fundo_id]) / $balanco_fundo[$data_anterior][$fundo_id];
+				} else {
+					$drawdown[$data][$fundo_id] = 0;
+				}
 
 				$patrimonio_fundo_view[$data][$fundo_id] = $balanco_fundo[$data][$fundo_id];
 				//var_dump($patrimonio_fundo_view);
@@ -160,7 +165,8 @@ class CarteirasInvestimentosController extends AppController {
 			$data_anterior = $data;
 		}
 		
-		$this->set(compact('id_fundo_unique', 'datas_totais', 'patrimonio_total_view', 'patrimonio_fundo_view', 'IndicadoresCarteiras'));
+		$this->set(compact('id_fundo_unique', 'datas_totais', 'patrimonio_total_view', 'patrimonio_fundo_view', 'drawdown',
+		 'IndicadoresCarteiras', 'carteirasInvestimento'));
 		
 	
 		/*
