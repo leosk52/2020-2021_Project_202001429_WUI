@@ -84,59 +84,91 @@ use Phinx\Db\Action\AddColumn;
 				<?php endif; ?>
             </div>
 			
-			<div class="table-responsive">
-	            <table>
-					<div class="related">
-						<h3><?= __('Gráficos') ?></h3>
-						<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+			<div class="related">
+				<h3><?= __('Indicadores Financeiros da Carteira') ?></h3>
+				<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
-						<div class="row">
-							<div class="column-graph">
-								<?php
-								echo$this->element('titleInfo', array('title' => __('Patrimônio Da Carteira e dos Ativos'), 'align' => 'center', 'h' => 3));
-							
-								$exibe = array("['Data', 'Patrimônio Líquido Total', ");
-								foreach ($id_fundo_unique as $fundo_id) {
-									$exibe[] = $exibe[count($exibe)-1] . "'Fundo " . (string) $fundo_id . "', ";
-								}
-								$exibeTudo[] = $exibe[count($exibe)-1] . "],";
-								
-								foreach ($datas_totais as $data) {
-									$exibeTudo[] = "['" . (string)$data . "', " . $patrimonio_total_view[$data]["total"];
-									$tamanho = count($exibeTudo) - 1;
-									foreach ($id_fundo_unique as $fundo_id) {
-										$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . ", " . $patrimonio_fundo_view[$data][$fundo_id];
-									}
-									$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . "],";
-								}
+				<div class="row">
+					<div class="column-graph">
+						<?php
+						echo$this->element('titleInfo', array('title' => __('Patrimônio Da Carteira e dos Ativos'), 'align' => 'center', 'h' => 3));
+					
+						$exibe = array("['Data', 'Patrimônio Líquido Total', ");
+						foreach ($id_fundo_unique as $fundo_id) {
+							$exibe[] = $exibe[count($exibe)-1] . "'Fundo " . (string) $fundo_id . "', ";
+						}
+						$exibeTudo[] = $exibe[count($exibe)-1] . "],";
+						
+						foreach ($datas_totais as $data) {
+							$exibeTudo[] = "['" . (string)$data . "', " . $patrimonio_total_view[$data]["total"];
+							$tamanho = count($exibeTudo) - 1;
+							foreach ($id_fundo_unique as $fundo_id) {
+								$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . ", " . $patrimonio_fundo_view[$data][$fundo_id];
+							}
+							$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . "],";
+						}
 
-								echo$this->element('googleChartFundo', array('data' => $exibeTudo, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
-								?>
-							<div id="chart1_div" style="width: 100%; height: 400px;"></div>
-							
-							<div class="column-graph"'>
-								<?php
-									echo$this->element('titleInfo', array('title' => __('Drawdown'), 'align' => 'center', 'h' => 3, 'info' => __('O drawdown é uma medida de perdas do fundos, e é obtido como a relação entre o valor atual da cota e o valor máximo já alcançado pela cota até aquele momento...')));
-									$exibe1 = array("['Data', 'Drawdown Total', ");
-									foreach ($id_fundo_unique as $fundo_id) {
-										$exibe1[] = $exibe1[count($exibe1)-1] . "'Drawdown Fundo " . (string) $fundo_id . "', ";
-									}
-									$exibeTudo1[] = $exibe1[count($exibe1)-1] . "],";
-
-									foreach ($datas_totais as $data) {
-										$exibeTudo1[] = "['" . (string)$data . "', " . 0;
-										$tamanho = count($exibeTudo1) - 1;
-										foreach ($id_fundo_unique as $fundo_id) {
-											$exibeTudo1[$tamanho] = $exibeTudo1[$tamanho] . ", " . (-$drawdown[$data][$fundo_id]);
-										}
-										$exibeTudo1[$tamanho] = $exibeTudo1[$tamanho] . "],";
-									}
-								echo$this->element('googleChartFundo', array('data' => $exibeTudo1, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart2_div'));
-								?>
-							<div id="chart2_div" style="width: 100%; height: 400px;"></div>
-						</div>
+						echo$this->element('googleChartFundo', array('data' => $exibeTudo, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
+						?>
+						<div id="chart1_div" style="width: 100%; height: 400px;"></div>
 					</div>
-				</table>
+					
+					<div class="column-graph"'>
+						<?php
+							echo$this->element('titleInfo', array('title' => __('Drawdown'), 'align' => 'center', 'h' => 3));
+							/*
+							$exibe1 = array("['Data', 'Drawdown Total', ");
+							foreach ($id_fundo_unique as $fundo_id) {
+								$exibe1[] = $exibe1[count($exibe1)-1] . "'Drawdown Fundo " . (string) $fundo_id . "', ";
+							}
+							$exibeTudo1[] = $exibe1[count($exibe1)-1] . "],";
+
+							foreach ($datas_totais as $data) {
+								$exibeTudo1[] = "['" . (string)$data . "', " . -$drawdown_total[$data]["total"];
+								$tamanho = count($exibeTudo1) - 1;
+								foreach ($id_fundo_unique as $fundo_id) {
+									$exibeTudo1[$tamanho] = $exibeTudo1[$tamanho] . ", " . (-$drawdown[$data][$fundo_id]);
+								}
+								$exibeTudo1[$tamanho] = $exibeTudo1[$tamanho] . "],";
+							}
+							*/
+							
+							$exibe1 = array("['Data', 'Drawdown Total'], ");
+
+							foreach ($datas_totais as $data) {
+								$exibe1[] = "['" . (string)$data . "', " . -$drawdown[$data]["total"] . "],";
+							}
+							
+						echo$this->element('googleChartFundo', array('data' => $exibe1, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart2_div'));
+						?>
+						<div id="chart2_div" style="width: 100%; height: 400px;"></div>
+					</div>
+				</div>		
+
+				<div class="row">
+					<div class="column-graph">
+						<?php
+						echo$this->element('titleInfo', array('title' => __('Rentabilidade Da Carteira e dos Ativos'), 'align' => 'center', 'h' => 3));
+					
+						$exibe2 = array("['Data', 'Rentabilidade Acumulada', ");
+						foreach ($id_fundo_unique as $fundo_id) {
+							$exibe2[] = $exibe2[count($exibe2)-1] . "'Rentabilidade diária do Fundo " . (string) $fundo_id . "', ";
+						}
+						$exibeTudo2[] = $exibe2[count($exibe2)-1] . "],";
+						
+						foreach ($datas_totais as $data) {
+							$exibeTudo2[] = "['" . (string)$data . "', " . $rentabilidade_total_view[$data]["total"];
+							$tamanho = count($exibeTudo2) - 1;
+							foreach ($id_fundo_unique as $fundo_id) {
+								$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . ", " . $rentabilidade_fundo_view[$data][$fundo_id];
+							}
+							$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . "],";
+						}
+
+						echo$this->element('googleChartFundo', array('data' => $exibeTudo2, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart3_div'));
+						?>
+						<div id="chart3_div" style="width: 100%; height: 400px;"></div>
+					</div>
 			</div>
 			
             <div class="related">

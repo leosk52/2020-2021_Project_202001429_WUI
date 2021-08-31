@@ -79,13 +79,14 @@ class CarteirasInvestimentosController extends AppController {
 			'contain' => ['Usuarios', 'IndicadoresCarteiras', 'OperacoesFinanceiras'=>['CnpjFundos', 'DistribuidorFundos', 'TipoOperacoesFinanceiras']],
 		]);
 
-		//var_dump($carteirasInvestimento->id);
-		//$this->set(compact('carteirasInvestimento'));
+
+		$this->set(compact('carteirasInvestimento'));
 		
 		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all');
 		//$this->set(compact('operacoes'));
-
+		//var_dump($carteirasInvestimento->operacoes_financeiras);
 		if (sizeof($carteirasInvestimento->operacoes_financeiras) == 0) return;
+		
 
 		// Preciso inicializar todas variaveis antes do for de cada op
 		$datas_totais = $this->calcula_datas_carteira($carteirasInvestimento);
@@ -138,12 +139,15 @@ class CarteirasInvestimentosController extends AppController {
 		// fors pra exibir os valores no grafico patrimonio
 		$patrimonio_total_view = [];
 		$patrimonio_fundo_view = [];
+		$rentabilidade_fundo_view = [];
+		$rentabilidade_total_view = [];
 		$drawdown = [];
 		$data_anterior = '';
+		$valor_maximo_carteira = 0;
 
 		foreach ($datas_totais as $data) {
 			$soma_fundos = 0;
-			$soma_drawdown_fundo = 0;
+			$soma_rentabilidade = 0;
 			foreach ($id_fundo_unique as $fundo_id) {
 
 				$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id]; // rend =500 * 0.053942641160
@@ -158,27 +162,45 @@ class CarteirasInvestimentosController extends AppController {
 				}
 
 				$patrimonio_fundo_view[$data][$fundo_id] = $balanco_fundo[$data][$fundo_id];
+
+				/*
+				if ($rentabilidade_fundo[$data][$fundo_id] < $rentabilidade_fundo[$data_anterior][$fundo_id]) {
+					$rentabilidade_fundo_view[$data][$fundo_id] = ($balanco_fundo[$data_anterior][$fundo_id] - $balanco_fundo[$data][$fundo_id]) / $balanco_fundo[$data_anterior][$fundo_id];
+				} else {
+					$rentabilidade_fundo_view[$data][$fundo_id] = 0;
+				}
+				*/
+				//var_dump($rentabilidade_fundo_view);
+
 				//var_dump($patrimonio_fundo_view);
 				$soma_fundos += $balanco_fundo[$data][$fundo_id];
+				$soma_rentabilidade += $rentabilidade_fundo[$data][$fundo_id];
 			}
 			$patrimonio_total_view[$data]["total"] = $soma_fundos;
+			
+			if ($patrimonio_total_view[$data]["total"] > $valor_maximo_carteira) {
+				$valor_maximo_carteira = $patrimonio_total_view[$data]["total"];
+			}
+			
+			if ($patrimonio_total_view[$data]["total"] < $valor_maximo_carteira) {
+				$drawdown[$data]["total"] = ($valor_maximo_carteira - $patrimonio_total_view[$data]["total"]) / $valor_maximo_carteira;
+			} else {
+				$drawdown[$data]["total"] = 0;
+			}
+
+			//$rentabilidade_total_view[$data]["total"] = $rentabilidade_total_view[$data_anterior]["total"] + $soma_rentabilidade;
 			$data_anterior = $data;
+
 		}
+		//var_dump($rentabilidade_fundo_view);
+		//exit();
 		
-		$this->set(compact('id_fundo_unique', 'datas_totais', 'patrimonio_total_view', 'patrimonio_fundo_view', 'drawdown',
-		 'IndicadoresCarteiras', 'carteirasInvestimento'));
+		$this->set(compact('id_fundo_unique', 'datas_totais', 'patrimonio_total_view', 'patrimonio_fundo_view', 'drawdown', 'rentabilidade_fundo_view', 
+		'rentabilidade_total_view', 'IndicadoresCarteiras', 'carteirasInvestimento'));
 		
 	
-		/*
-		$this->paginate = [
-			'contain' => ['CarteirasInvestimentos', 'CnpjFundos', 'DistribuidorFundos', 'TipoOperacoesFinanceiras'],
-		];
-		$operacoesFinanceiras = $this->paginate($this->OperacoesFinanceiras);
 
-		$this->set(compact('operacoesFinanceiras'));
-		 *
-		 */
-		//$this->set((compact('IndicadoresCarteiras')));
+
 	}
 
 	/**
