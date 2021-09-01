@@ -100,10 +100,10 @@ use Phinx\Db\Action\AddColumn;
 						$exibeTudo[] = $exibe[count($exibe)-1] . "],";
 						
 						foreach ($datas_totais as $data) {
-							$exibeTudo[] = "['" . (string)$data . "', " . $patrimonio_total_view[$data]["total"];
+							$exibeTudo[] = "['" . (string)$data . "', " . $calculo_patrimonio[$data]["total"];
 							$tamanho = count($exibeTudo) - 1;
 							foreach ($id_fundo_unique as $fundo_id) {
-								$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . ", " . $patrimonio_fundo_view[$data][$fundo_id];
+								$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . ", " . $calculo_patrimonio[$data][$fundo_id];
 							}
 							$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . "],";
 						}
@@ -115,28 +115,11 @@ use Phinx\Db\Action\AddColumn;
 					
 					<div class="column-graph"'>
 						<?php
-							echo$this->element('titleInfo', array('title' => __('Drawdown'), 'align' => 'center', 'h' => 3));
-							/*
-							$exibe1 = array("['Data', 'Drawdown Total', ");
-							foreach ($id_fundo_unique as $fundo_id) {
-								$exibe1[] = $exibe1[count($exibe1)-1] . "'Drawdown Fundo " . (string) $fundo_id . "', ";
-							}
-							$exibeTudo1[] = $exibe1[count($exibe1)-1] . "],";
-
-							foreach ($datas_totais as $data) {
-								$exibeTudo1[] = "['" . (string)$data . "', " . -$drawdown_total[$data]["total"];
-								$tamanho = count($exibeTudo1) - 1;
-								foreach ($id_fundo_unique as $fundo_id) {
-									$exibeTudo1[$tamanho] = $exibeTudo1[$tamanho] . ", " . (-$drawdown[$data][$fundo_id]);
-								}
-								$exibeTudo1[$tamanho] = $exibeTudo1[$tamanho] . "],";
-							}
-							*/
-							
+							echo$this->element('titleInfo', array('title' => __('Drawdown'), 'align' => 'center', 'h' => 3));							
 							$exibe1 = array("['Data', 'Drawdown Total'], ");
 
 							foreach ($datas_totais as $data) {
-								$exibe1[] = "['" . (string)$data . "', " . -$drawdown[$data]["total"] . "],";
+								$exibe1[] = "['" . (string)$data . "', " . -$calculo_drawdown[$data]["total"] . "],";
 							}
 							
 						echo$this->element('googleChartFundo', array('data' => $exibe1, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart2_div'));
@@ -157,10 +140,10 @@ use Phinx\Db\Action\AddColumn;
 						$exibeTudo2[] = $exibe2[count($exibe2)-1] . "],";
 						
 						foreach ($datas_totais as $data) {
-							$exibeTudo2[] = "['" . (string)$data . "', " . $rentabilidade_total_view[$data]["total"];
+							$exibeTudo2[] = "['" . (string)$data . "', " . $calculo_rentab_percent[$data]["total"];
 							$tamanho = count($exibeTudo2) - 1;
 							foreach ($id_fundo_unique as $fundo_id) {
-								$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . ", " . $rentabilidade_fundo_view[$data][$fundo_id];
+								$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . ", " . $calculo_rentab_percent[$data][$fundo_id];
 							}
 							$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . "],";
 						}

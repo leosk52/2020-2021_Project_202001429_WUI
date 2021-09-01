@@ -65,7 +65,72 @@ class CarteirasInvestimentosController extends AppController {
 
 		return $datasDaCarteira[0];
 	}
-	
+
+	public function calcula_patrimonio($datas_totais, $id_fundo_unique, $balanco_fundo, $rentabilidade_fundo) {
+		$ret_dados = [];
+
+		$data_anterior = '';
+
+		foreach ($datas_totais as $data) {
+			$soma_fundos = 0;
+			foreach ($id_fundo_unique as $fundo_id) {
+				$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id];
+				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia;
+
+				$ret_dados[$data][$fundo_id] = $balanco_fundo[$data][$fundo_id];
+
+				$soma_fundos += $balanco_fundo[$data][$fundo_id];
+			}
+			$ret_dados[$data]["total"] = $soma_fundos;
+
+			$data_anterior = $data;	
+		}
+
+		return $ret_dados;
+	}
+
+	public function calcula_drawdown($datas_totais, $calculo_patrimonio) {
+		$ret_dados = [];
+		$valor_maximo_carteira = 0;
+
+		foreach ($datas_totais as $data) {			
+			if ($calculo_patrimonio[$data]["total"] > $valor_maximo_carteira) {
+				$valor_maximo_carteira = $calculo_patrimonio[$data]["total"];
+			}
+			
+			if ($calculo_patrimonio[$data]["total"] < $valor_maximo_carteira) {
+				$ret_dados[$data]["total"] = ($valor_maximo_carteira - $calculo_patrimonio[$data]["total"]) / $valor_maximo_carteira;
+			} else {
+				$ret_dados[$data]["total"] = 0;
+			}
+		}
+
+		return $ret_dados;
+	}
+
+	public function calcula_rentab($datas_totais, $id_fundo_unique, $calculo_patrimonio, $rentabilidade_fundo) {
+		$ret_dados = [];
+		$data_anterior = '';
+		
+		foreach ($datas_totais as $data) {
+			$soma_rentabilidade = 0;
+			foreach ($id_fundo_unique as $fundo_id) {
+				$primeiro_valor = $calculo_patrimonio[$datas_totais[0]]["total"];
+				//var_dump($primeiro_valor);
+				if ($rentabilidade_fundo[$data][$fundo_id] != null) {
+					$ret_dados[$data][$fundo_id] = ($primeiro_valor - $rentabilidade_fundo[$data][$fundo_id]) / $primeiro_valor;
+				} else {
+					$ret_dados[$data][$fundo_id] = 0;
+				}
+				$soma_rentabilidade += $ret_dados[$data][$fundo_id];
+			}
+
+			$ret_dados[$data]["total"] = $ret_dados[$data_anterior]["total"] + $soma_rentabilidade;
+			$data_anterior = $data;
+		}
+
+		return $ret_dados;
+	}
 	
 	/**
 	 * View method
@@ -142,61 +207,14 @@ class CarteirasInvestimentosController extends AppController {
 		$rentabilidade_fundo_view = [];
 		$rentabilidade_total_view = [];
 		$drawdown = [];
-		$data_anterior = '';
 		$valor_maximo_carteira = 0;
 
-		foreach ($datas_totais as $data) {
-			$soma_fundos = 0;
-			$soma_rentabilidade = 0;
-			foreach ($id_fundo_unique as $fundo_id) {
+		$calculo_patrimonio = $this->calcula_patrimonio($datas_totais, $id_fundo_unique, $balanco_fundo, $rentabilidade_fundo);
+		$calculo_drawdown = $this->calcula_drawdown($datas_totais, $calculo_patrimonio);
+		$calculo_rentab_percent = $this->calcula_rentab($datas_totais, $id_fundo_unique, $calculo_patrimonio, $rentabilidade_fundo);
 
-				$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id]; // rend =500 * 0.053942641160
-				//var_dump($rendimento_dia);
-				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia; //$patrimonio_dia_anterior; // 5000, 5000 + (5000*0.00005)
-				//var_dump($balanco_fundo[$data][$fundo_id]);
-
-				if ($balanco_fundo[$data][$fundo_id] < $balanco_fundo[$data_anterior][$fundo_id]) {
-					$drawdown[$data][$fundo_id] = ($balanco_fundo[$data_anterior][$fundo_id] - $balanco_fundo[$data][$fundo_id]) / $balanco_fundo[$data_anterior][$fundo_id];
-				} else {
-					$drawdown[$data][$fundo_id] = 0;
-				}
-
-				$patrimonio_fundo_view[$data][$fundo_id] = $balanco_fundo[$data][$fundo_id];
-
-				/*
-				if ($rentabilidade_fundo[$data][$fundo_id] < $rentabilidade_fundo[$data_anterior][$fundo_id]) {
-					$rentabilidade_fundo_view[$data][$fundo_id] = ($balanco_fundo[$data_anterior][$fundo_id] - $balanco_fundo[$data][$fundo_id]) / $balanco_fundo[$data_anterior][$fundo_id];
-				} else {
-					$rentabilidade_fundo_view[$data][$fundo_id] = 0;
-				}
-				*/
-				//var_dump($rentabilidade_fundo_view);
-
-				//var_dump($patrimonio_fundo_view);
-				$soma_fundos += $balanco_fundo[$data][$fundo_id];
-				$soma_rentabilidade += $rentabilidade_fundo[$data][$fundo_id];
-			}
-			$patrimonio_total_view[$data]["total"] = $soma_fundos;
-			
-			if ($patrimonio_total_view[$data]["total"] > $valor_maximo_carteira) {
-				$valor_maximo_carteira = $patrimonio_total_view[$data]["total"];
-			}
-			
-			if ($patrimonio_total_view[$data]["total"] < $valor_maximo_carteira) {
-				$drawdown[$data]["total"] = ($valor_maximo_carteira - $patrimonio_total_view[$data]["total"]) / $valor_maximo_carteira;
-			} else {
-				$drawdown[$data]["total"] = 0;
-			}
-
-			//$rentabilidade_total_view[$data]["total"] = $rentabilidade_total_view[$data_anterior]["total"] + $soma_rentabilidade;
-			$data_anterior = $data;
-
-		}
-		//var_dump($rentabilidade_fundo_view);
-		//exit();
 		
-		$this->set(compact('id_fundo_unique', 'datas_totais', 'patrimonio_total_view', 'patrimonio_fundo_view', 'drawdown', 'rentabilidade_fundo_view', 
-		'rentabilidade_total_view', 'IndicadoresCarteiras', 'carteirasInvestimento'));
+		$this->set(compact('id_fundo_unique', 'calculo_patrimonio', 'datas_totais', 'calculo_drawdown', 'calculo_rentab_percent', 'IndicadoresCarteiras', 'carteirasInvestimento'));
 		
 	
 
