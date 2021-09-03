@@ -46,9 +46,6 @@ use App\Model\Entity\CnpjFundo;
                 ?>
                 
                 <div class="resultado_busca"></div>
-                <div>
-                    <h4 class="heading"> Insira o ID que será retornado no campo Cnpj Fundo</h4>
-                </div>
                 <div class="cnpj_fundo_id"></div>
 
                 <legend><?= __('Nova Operação Financeira') ?></legend>

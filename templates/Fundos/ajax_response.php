@@ -7,9 +7,9 @@
 			data: {id: data},
 
 			success: function (response) {
+				data = "Insira esse ID: " + data + " no campo Cnpj fundo ";
 				$('.cnpj_fundo_id').html(data)
-				$('.resultado_busca').html(response),
-				$('.resultado_id').val(data);
+				$('.resultado_busca').html(response);
 			}
 		});
 	}
