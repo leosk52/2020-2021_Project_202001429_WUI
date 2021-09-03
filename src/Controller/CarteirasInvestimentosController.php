@@ -72,8 +72,6 @@ class CarteirasInvestimentosController extends AppController {
 		foreach ($datas_totais as $data) {
 			$soma_fundos = 0;
 			foreach ($id_fundo_unique as $fundo_id) {
-				//$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id];
-				//$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia;
 				$balanco_atual = $balanco_fundo[$data][$fundo_id];
 
 				$ret_dados[$data][$fundo_id] = $balanco_atual;
@@ -142,19 +140,12 @@ class CarteirasInvestimentosController extends AppController {
 		$this->set(compact('carteirasInvestimento'));
 
 		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all');
-		//$this->set(compact('operacoes'));
-		//var_dump($carteirasInvestimento->operacoes_financeiras);
 		if (sizeof($carteirasInvestimento->operacoes_financeiras) == 0) return;
 		
-
-		// Preciso inicializar todas variaveis antes do for de cada op
 		$datas_totais = $this->calcula_datas_carteira($carteirasInvestimento);
-		//var_dump($datas_totais[0]);
 		$rentabilidade_fundo = [];
 		
 		$busca_tipo_operacao = $this->CarteirasInvestimentos->OperacoesFinanceiras->TipoOperacoesFinanceiras->find('all');
-		//$busca_tipo_operacao = TableRegistry::getTableLocator()->get('TipoOperacoesFinanceiras')->find('all');
-		//var_dump($busca_tipo_operacao);
 		foreach ($busca_tipo_operacao as $tipo_operacao) {
 			$tipo_de_operacao[$tipo_operacao['id']] = $tipo_operacao['is_aplicacao'];
 		}
