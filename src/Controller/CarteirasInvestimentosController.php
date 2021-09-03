@@ -66,24 +66,21 @@ class CarteirasInvestimentosController extends AppController {
 		return $datasDaCarteira[0];
 	}
 
-	public function calcula_patrimonio($datas_totais, $id_fundo_unique, $balanco_fundo, $rentabilidade_fundo) {
+	public function calcula_patrimonio($datas_totais, $id_fundo_unique, $balanco_fundo) {
 		$ret_dados = [];
-		$data_anterior = '';
 		
-
 		foreach ($datas_totais as $data) {
 			$soma_fundos = 0;
 			foreach ($id_fundo_unique as $fundo_id) {
-				$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id];
-				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia;
+				//$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id];
+				//$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia;
+				$balanco_atual = $balanco_fundo[$data][$fundo_id];
 
-				$ret_dados[$data][$fundo_id] = $balanco_fundo[$data][$fundo_id];
+				$ret_dados[$data][$fundo_id] = $balanco_atual;
 
-				$soma_fundos += $balanco_fundo[$data][$fundo_id];
+				$soma_fundos += $balanco_atual;
 			}
 			$ret_dados[$data]["total"] = $soma_fundos;
-
-			$data_anterior = $data;	
 		}
 
 		return $ret_dados;
@@ -93,13 +90,15 @@ class CarteirasInvestimentosController extends AppController {
 		$ret_dados = [];
 		$valor_maximo_carteira = 0;
 
-		foreach ($datas_totais as $data) {			
-			if ($calculo_patrimonio[$data]["total"] > $valor_maximo_carteira) {
-				$valor_maximo_carteira = $calculo_patrimonio[$data]["total"];
+		foreach ($datas_totais as $data) {		
+			$calculo_patrimonio_aux = $calculo_patrimonio[$data]["total"];
+			
+			if ($calculo_patrimonio_aux > $valor_maximo_carteira) {
+				$valor_maximo_carteira = $calculo_patrimonio_aux;
 			}
 			
-			if ($calculo_patrimonio[$data]["total"] < $valor_maximo_carteira) {
-				$ret_dados[$data]["total"] = ($valor_maximo_carteira - $calculo_patrimonio[$data]["total"]) / $valor_maximo_carteira;
+			if ($calculo_patrimonio_aux < $valor_maximo_carteira) {
+				$ret_dados[$data]["total"] = ($valor_maximo_carteira - $calculo_patrimonio_aux) / $valor_maximo_carteira;
 			} else {
 				$ret_dados[$data]["total"] = 0;
 			}
@@ -108,29 +107,27 @@ class CarteirasInvestimentosController extends AppController {
 		return $ret_dados;
 	}
 
-	public function calcula_rentab($datas_totais, $id_fundo_unique, $balanco_fundo, $rentabilidade_fundo, $calculo_patrimonio) {
+	public function calcula_rentab($datas_totais, $id_fundo_unique, $balanco_fundo, $rendimento_dia, $calculo_patrimonio) {
 		$ret_dados = [];
-		$data_anterior = '';
 		$soma_rentabilidade = 0;
 
 		foreach ($datas_totais as $data) {
 			foreach ($id_fundo_unique as $fundo_id) {
-				$rendimento_dia = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id];
-				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia;
+				$balanco_atual = $balanco_fundo[$data][$fundo_id];
+				$rendimento_atual = $rendimento_dia[$data][$fundo_id];
 				
-				if ($balanco_fundo[$data][$fundo_id] != 0) {
-					$ret_dados[$data][$fundo_id] = $rendimento_dia / $balanco_fundo[$data][$fundo_id];
+				if ($balanco_atual != 0) {
+					$ret_dados[$data][$fundo_id] = $rendimento_atual / $balanco_atual;
 				} else {
 					$ret_dados[$data][$fundo_id] = 0;
 				}
-				$soma_rentabilidade += $rendimento_dia;
+				$soma_rentabilidade += $rendimento_atual;
 			}
 			if ($calculo_patrimonio[$data]["total"] != 0) {
 				$ret_dados[$data]["total"] = $soma_rentabilidade / $calculo_patrimonio[$data]["total"];
 			} else {
 				$ret_dados[$data]["total"] = 0;
 			}
-			$data_anterior = $data;	
 		}
 
 		return $ret_dados;
@@ -163,6 +160,7 @@ class CarteirasInvestimentosController extends AppController {
 		$rentabilidade_fundo = [];
 		
 		$busca_tipo_operacao = $this->CarteirasInvestimentos->OperacoesFinanceiras->TipoOperacoesFinanceiras->find('all');
+		//$busca_tipo_operacao = TableRegistry::getTableLocator()->get('TipoOperacoesFinanceiras')->find('all');
 		//var_dump($busca_tipo_operacao);
 		foreach ($busca_tipo_operacao as $tipo_operacao) {
 			$tipo_de_operacao[$tipo_operacao['id']] = $tipo_operacao['is_aplicacao'];
@@ -171,7 +169,6 @@ class CarteirasInvestimentosController extends AppController {
 		// Calcula patrimonio total de uma carteira e dos fundos individuais
 		$id_fundo_unique = [];	
 		$balanco_fundo = [];
-		$patrimonio_total_inicial = 0;
 				
 		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
 
@@ -187,46 +184,45 @@ class CarteirasInvestimentosController extends AppController {
 			} else {
 				$balanco_fundo[$auxiliar_data][$auxiliar_fundo] -= $valor_total;
 			}
-			$patrimonio_total_inicial += $balanco_fundo[$auxiliar_data][$auxiliar_fundo];
-			//var_dump($patrimonio_total_inicial);
 
 		endforeach;
 
-		//var_dump($patrimonio_total_inicial);
 		$id_fundo_unique = array_unique($id_fundo_unique);
 
 		$primeira_data_carteira = $this->calcula_primeira_data($carteirasInvestimento);
 		$primeira_data_format = date('Y/m/d', $primeira_data_carteira->getTimestamp());
 
-		// busca rentabilidade
+		// busca rentabilidade		
 		foreach ($id_fundo_unique as $fundo_id) {				
 			$busca_rentabilidade = $this->CarteirasInvestimentos->OperacoesFinanceiras->CnpjFundos->DocInfDiarioFundos->find('all',
-		 		['order' => ['DT_COMPTC' => 'ASC']])->where(['cnpj_fundo_id' => $fundo_id, 'DT_COMPTC >=' => $primeira_data_format]);
+		 		['order' => ['DT_COMPTC' => 'ASC']])->where(['cnpj_fundo_id' => $fundo_id, 'DT_COMPTC >=' => $primeira_data_format]);				
 
 			foreach ($busca_rentabilidade as $busca) {
 				$data = date('d/m/Y', $busca['DT_COMPTC']->getTimestamp());
 				$rentabilidade_fundo[$data][$fundo_id] = $busca['rentab_diaria'];
 			}
 		}
-		
-		// fors pra exibir os valores no grafico patrimonio
-		$patrimonio_total_view = [];
-		$patrimonio_fundo_view = [];
-		$rentabilidade_fundo_view = [];
-		$rentabilidade_total_view = [];
-		$drawdown = [];
-		$valor_maximo_carteira = 0;
 
-		$calculo_patrimonio = $this->calcula_patrimonio($datas_totais, $id_fundo_unique, $balanco_fundo, $rentabilidade_fundo);
+		$rendimento_dia[] = 0;
+		$data_anterior = '';
+
+		// calcula rendimento e balanco do dia e fundo
+		foreach ($datas_totais as $data) {
+			foreach ($id_fundo_unique as $fundo_id) {
+				$rendimento_dia[$data][$fundo_id] = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id];
+				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia[$data][$fundo_id];
+			}
+			$data_anterior = $data;
+		}
+
+		$calculo_patrimonio = $this->calcula_patrimonio($datas_totais, $id_fundo_unique, $balanco_fundo);
 		$calculo_drawdown = $this->calcula_drawdown($datas_totais, $calculo_patrimonio);
-		$calculo_rentab_percent = $this->calcula_rentab($datas_totais, $id_fundo_unique, $balanco_fundo, $rentabilidade_fundo, $calculo_patrimonio);
+		$calculo_rentab_percent = $this->calcula_rentab($datas_totais, $id_fundo_unique, $balanco_fundo, $rendimento_dia, $calculo_patrimonio);
 
 		
 		$this->set(compact('id_fundo_unique', 'calculo_patrimonio', 'datas_totais', 'calculo_drawdown', 'calculo_rentab_percent', 'IndicadoresCarteiras', 'carteirasInvestimento'));
 		
 	
-
-
 	}
 
 	/**
