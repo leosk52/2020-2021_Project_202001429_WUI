@@ -84,124 +84,79 @@ use Phinx\Db\Action\AddColumn;
 				<?php endif; ?>
             </div>
 			
-			<div class="related">
-				<h3><?= __('Indicadores Financeiros da Carteira') ?></h3>
-				<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
-				<div class="row">
-					<div class="column-graph">
-						<?php
-						echo$this->element('titleInfo', array('title' => __('Patrimônio Da Carteira e dos Ativos'), 'align' => 'center', 'h' => 3));
-					
-						$exibe = array("['Data', 'Patrimônio Líquido Total', ");
-						foreach ($id_fundo_unique as $fundo_id) {
-							$exibe[] = $exibe[count($exibe)-1] . "'Fundo " . (string) $fundo_id . "', ";
-						}
-						$exibeTudo[] = $exibe[count($exibe)-1] . "],";
-						
-						foreach ($datas_totais as $data) {
-							$exibeTudo[] = "['" . (string)$data . "', " . $calculo_patrimonio[$data]["total"];
-							$tamanho = count($exibeTudo) - 1;
-							foreach ($id_fundo_unique as $fundo_id) {
-								$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . ", " . $calculo_patrimonio[$data][$fundo_id];
-							}
-							$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . "],";
-						}
-
-						echo$this->element('googleChartFundo', array('data' => $exibeTudo, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
-						?>
-						<div id="chart1_div" style="width: 100%; height: 400px;"></div>
-					</div>
-					
-					<div class="column-graph"'>
-						<?php
-							echo$this->element('titleInfo', array('title' => __('Drawdown'), 'align' => 'center', 'h' => 3));							
-							$exibe1 = array("['Data', 'Drawdown Total'], ");
-
-							foreach ($datas_totais as $data) {
-								$exibe1[] = "['" . (string)$data . "', " . -$calculo_drawdown[$data]["total"] . "],";
-							}
-							
-						echo$this->element('googleChartFundo', array('data' => $exibe1, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart2_div'));
-						?>
-						<div id="chart2_div" style="width: 100%; height: 400px;"></div>
-					</div>
-				</div>		
-
-				<div class="row">
-					<div class="column-graph">
-						<?php
-						echo$this->element('titleInfo', array('title' => __('Rentabilidade Da Carteira e dos Ativos'), 'align' => 'center', 'h' => 3));
-					
-						$exibe2 = array("['Data', 'Rentabilidade Acumulada', ");
-						foreach ($id_fundo_unique as $fundo_id) {
-							$exibe2[] = $exibe2[count($exibe2)-1] . "'Rentabilidade diária do Fundo " . (string) $fundo_id . "', ";
-						}
-						$exibeTudo2[] = $exibe2[count($exibe2)-1] . "],";
-						
-						foreach ($datas_totais as $data) {
-							$exibeTudo2[] = "['" . (string)$data . "', " . $calculo_rentab_percent[$data]["total"];
-							$tamanho = count($exibeTudo2) - 1;
-							foreach ($id_fundo_unique as $fundo_id) {
-								$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . ", " . $calculo_rentab_percent[$data][$fundo_id];
-							}
-							$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . "],";
-						}
-
-						echo$this->element('googleChartFundo', array('data' => $exibeTudo2, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart3_div'));
-						?>
-						<div id="chart3_div" style="width: 100%; height: 400px;"></div>
-					</div>
-			</div>
 			
+			<?php if (!empty($carteirasInvestimento->operacoes_financeiras)) : ?>
             <div class="related">
-                <h4><?= __('Indicadores Financeiros da Carteira') ?></h4>
-				<?php if (!empty($carteirasInvestimento->indicadores_carteiras)) : ?>
-	                <div class="table-responsive">
-	                    <table>
-	                        <tr>
-	                            <th><?= __('Carteiras Investimento Id') ?></th>
-	                            <th><?= __('Periodo Meses') ?></th>
-	                            <th><?= __('Data Final') ?></th>
-	                            <th><?= __('Rentabilidade') ?></th>
-	                            <th><?= __('Desvio Padrao') ?></th>
-	                            <th><?= __('Num Valores') ?></th>
-	                            <th><?= __('Rentab Min') ?></th>
-	                            <th><?= __('Rentab Max') ?></th>
-	                            <th><?= __('Max Drawdown') ?></th>
-	                            <th><?= __('Tipo Benchmark Id') ?></th>
-	                            <th><?= __('Meses Acima Bench') ?></th>
-	                            <th><?= __('Sharpe') ?></th>
-	                            <th><?= __('Beta') ?></th>
-	                            <th class="actions"><?= __('Actions') ?></th>
-	                        </tr>
-							<?php foreach ($carteirasInvestimento->indicadores_carteiras as $indicadoresCarteiras) : ?>
-		                        <tr>
-		                            <td><?= h($indicadoresCarteiras->carteiras_investimento_id) ?></td>
-		                            <td><?= h($indicadoresCarteiras->periodo_meses) ?></td>
-		                            <td><?= h($indicadoresCarteiras->data_final) ?></td>
-		                            <td><?= h($indicadoresCarteiras->rentabilidade) ?></td>
-		                            <td><?= h($indicadoresCarteiras->desvio_padrao) ?></td>
-		                            <td><?= h($indicadoresCarteiras->num_valores) ?></td>
-		                            <td><?= h($indicadoresCarteiras->rentab_min) ?></td>
-		                            <td><?= h($indicadoresCarteiras->rentab_max) ?></td>
-		                            <td><?= h($indicadoresCarteiras->max_drawdown) ?></td>
-		                            <td><?= h($indicadoresCarteiras->tipo_benchmark_id) ?></td>
-		                            <td><?= h($indicadoresCarteiras->meses_acima_bench) ?></td>
-		                            <td><?= h($indicadoresCarteiras->sharpe) ?></td>
-		                            <td><?= h($indicadoresCarteiras->beta) ?></td>
-		                            <td class="actions">
-										<?= $this->Html->link(__('View'), ['controller' => 'IndicadoresCarteiras', 'action' => 'view', $indicadoresCarteiras->carteiras_investimento_id]) ?>
-										<?= $this->Html->link(__('Edit'), ['controller' => 'IndicadoresCarteiras', 'action' => 'edit', $indicadoresCarteiras->carteiras_investimento_id]) ?>
-										<?= $this->Form->postLink(__('Delete'), ['controller' => 'IndicadoresCarteiras', 'action' => 'delete', $indicadoresCarteiras->carteiras_investimento_id], ['confirm' => __('Are you sure you want to delete # {0}?', $indicadoresCarteiras->carteiras_investimento_id)]) ?>
-		                            </td>
-		                        </tr>
-							<?php endforeach; ?>
-	                    </table>
-	                </div>
+                <h4><?= __('Indicadores Financeiros da Carteira') ?></h4>>
+					<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+					<div class="row">
+						<div class="column-graph">
+							<?php
+							echo$this->element('titleInfo', array('title' => __('Patrimônio Da Carteira e dos Ativos'), 'align' => 'center', 'h' => 3));
+						
+							$exibe = array("['Data', 'Patrimônio Líquido Total', ");
+							foreach ($id_fundo_unique as $fundo_id) {
+								$exibe[] = $exibe[count($exibe)-1] . "'Fundo " . (string) $fundo_id . "', ";
+							}
+							$exibeTudo[] = $exibe[count($exibe)-1] . "],";
+							
+							foreach ($datas_totais as $data) {
+								$exibeTudo[] = "['" . (string)$data . "', " . $calculo_patrimonio[$data]["total"];
+								$tamanho = count($exibeTudo) - 1;
+								foreach ($id_fundo_unique as $fundo_id) {
+									$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . ", " . $calculo_patrimonio[$data][$fundo_id];
+								}
+								$exibeTudo[$tamanho] = $exibeTudo[$tamanho] . "],";
+							}
+
+							echo$this->element('googleChartFundo', array('data' => $exibeTudo, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'currency', 'chart' => 'chart1_div'));
+							?>
+							<div id="chart1_div" style="width: 100%; height: 400px;"></div>
+						</div>
+						
+						<div class="column-graph"'>
+							<?php
+								echo$this->element('titleInfo', array('title' => __('Drawdown'), 'align' => 'center', 'h' => 3));							
+								$exibe1 = array("['Data', 'Drawdown Total'], ");
+
+								foreach ($datas_totais as $data) {
+									$exibe1[] = "['" . (string)$data . "', " . -$calculo_drawdown[$data]["total"] . "],";
+								}
+								
+							echo$this->element('googleChartFundo', array('data' => $exibe1, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart2_div'));
+							?>
+							<div id="chart2_div" style="width: 100%; height: 400px;"></div>
+						</div>
+					</div>		
+
+					<div class="row">
+						<div class="column-graph">
+							<?php
+							echo$this->element('titleInfo', array('title' => __('Rentabilidade Da Carteira e dos Ativos'), 'align' => 'center', 'h' => 3));
+						
+							$exibe2 = array("['Data', 'Rentabilidade Acumulada', ");
+							foreach ($id_fundo_unique as $fundo_id) {
+								$exibe2[] = $exibe2[count($exibe2)-1] . "'Rentabilidade diária do Fundo " . (string) $fundo_id . "', ";
+							}
+							$exibeTudo2[] = $exibe2[count($exibe2)-1] . "],";
+							
+							foreach ($datas_totais as $data) {
+								$exibeTudo2[] = "['" . (string)$data . "', " . $calculo_rentab_percent[$data]["total"];
+								$tamanho = count($exibeTudo2) - 1;
+								foreach ($id_fundo_unique as $fundo_id) {
+									$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . ", " . $calculo_rentab_percent[$data][$fundo_id];
+								}
+								$exibeTudo2[$tamanho] = $exibeTudo2[$tamanho] . "],";
+							}
+
+							echo$this->element('googleChartFundo', array('data' => $exibeTudo2, 'title' => '', 'vAxisTitle' => '', 'vAxisFormat' => 'percent', 'chart' => 'chart3_div'));
+							?>
+							<div id="chart3_div" style="width: 100%; height: 400px;"></div>
+						</div>
+					</div>
 				<?php endif; ?>
             </div>
-			
         </div>
     </div>
 </div>

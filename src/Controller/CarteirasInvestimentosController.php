@@ -132,22 +132,15 @@ class CarteirasInvestimentosController extends AppController {
 
 		return $ret_dados;
 	}
-	
-	/**
-	 * View method
-	 *
-	 * @param string|null $id Carteiras Investimento id.
-	 * @return \Cake\Http\Response|null|void Renders view
-	 * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-	 */
-	public function view($id = null) {
+
+
+	public function indicadores($id = null) {
+
 		$carteirasInvestimento = $this->CarteirasInvestimentos->get($id, [
 			'contain' => ['Usuarios', 'IndicadoresCarteiras', 'OperacoesFinanceiras'=>['CnpjFundos', 'DistribuidorFundos', 'TipoOperacoesFinanceiras']],
 		]);
-
-
 		$this->set(compact('carteirasInvestimento'));
-		
+
 		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all');
 		//$this->set(compact('operacoes'));
 		//var_dump($carteirasInvestimento->operacoes_financeiras);
@@ -222,6 +215,23 @@ class CarteirasInvestimentosController extends AppController {
 		
 		$this->set(compact('id_fundo_unique', 'calculo_patrimonio', 'datas_totais', 'calculo_drawdown', 'calculo_rentab_percent', 'IndicadoresCarteiras', 'carteirasInvestimento'));
 		
+	}
+	
+	/**
+	 * View method
+	 *
+	 * @param string|null $id Carteiras Investimento id.
+	 * @return \Cake\Http\Response|null|void Renders view
+	 * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+	 */
+	public function view($id = null) {
+		$carteirasInvestimento = $this->CarteirasInvestimentos->get($id, [
+			'contain' => ['Usuarios', 'IndicadoresCarteiras', 'OperacoesFinanceiras'=>['CnpjFundos', 'DistribuidorFundos', 'TipoOperacoesFinanceiras']],
+		]);
+		
+		$this->indicadores($id);
+
+		$this->set(compact('carteirasInvestimento'));
 	
 	}
 
