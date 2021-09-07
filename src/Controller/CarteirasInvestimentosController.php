@@ -31,39 +31,26 @@ class CarteirasInvestimentosController extends AppController {
 		$this->set(compact('carteirasInvestimentos', 'userName'));
 	}
 
-	public function calcula_datas_carteira($carteirasInvestimento) {
-		// pega todas datas desde a primeira operacao até o dia atual
-		$first_data = new DateTime('01/01/2100');
-		$first_data->format('Y-m-d');
+	public function calcula_datas_carteira($operacoes) {
 		$data_list = [];
 		$datasDaCarteira = [];
 		
-		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
-			$datasDaCarteira[] = $operacoes->data;
-		endforeach;
-
+		foreach ($operacoes as $operacao) {
+			$datasDaCarteira[] = $operacao->data;
+		}
 		sort($datasDaCarteira); // datas da carteira ordenadas asc
 		$datasDaCarteira = array_unique($datasDaCarteira);
-		
+				
 		$primeira_data = date('Y/m/d', $datasDaCarteira[0]->getTimestamp());
+		
 		$segunda_data = date('Y/m/d');
-
-
+		
 		while (strtotime($primeira_data) < strtotime($segunda_data)) :
 			$data_list[] = date('d/m/Y', strtotime($primeira_data));
 			$primeira_data = date('Y/m/d', strtotime("$primeira_data +1 day"));
 		endwhile;
 
 		return $data_list;
-	}
-
-	public function calcula_primeira_data($carteirasInvestimento) {
-		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
-			$datasDaCarteira[] = $operacoes->data;
-		endforeach;
-		sort($datasDaCarteira);
-
-		return $datasDaCarteira[0];
 	}
 
 	public function calcula_patrimonio($datas_totais, $id_fundo_unique, $balanco_fundo) {
@@ -133,37 +120,60 @@ class CarteirasInvestimentosController extends AppController {
 
 
 	public function indicadores($id = null) {
-
+		
 		$carteirasInvestimento = $this->CarteirasInvestimentos->get($id, [
 			'contain' => ['Usuarios', 'IndicadoresCarteiras', 'OperacoesFinanceiras'=>['CnpjFundos', 'DistribuidorFundos', 'TipoOperacoesFinanceiras']],
 		]);
+		
 		$this->set(compact('carteirasInvestimento'));
+		
 
-		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all');
-		if (sizeof($carteirasInvestimento->operacoes_financeiras) == 0) return;
+		$operacoes = $this->CarteirasInvestimentos->OperacoesFinanceiras->find('all', ['order' => ['data' => 'ASC']])->where(['carteiras_investimento_id' => $id])->toList();
 		
-		$datas_totais = $this->calcula_datas_carteira($carteirasInvestimento);
-		$rentabilidade_fundo = [];
-		
+		if (sizeof($operacoes) == 0) return;
+		$datas_totais = $this->calcula_datas_carteira($operacoes);
+
+		$rentabilidade_fundo = [];		
+	
 		$busca_tipo_operacao = $this->CarteirasInvestimentos->OperacoesFinanceiras->TipoOperacoesFinanceiras->find('all');
 		foreach ($busca_tipo_operacao as $tipo_operacao) {
 			$tipo_de_operacao[$tipo_operacao['id']] = $tipo_operacao['is_aplicacao'];
 		}
-
+		
 		// Calcula patrimonio total de uma carteira e dos fundos individuais
 		$id_fundo_unique = [];	
 		$balanco_fundo = [];
+
+		$primeira_data_format = ($operacoes[0]['data']);
+		$primeira_data_carteira = date('Y-m-d', $primeira_data_format->getTimestamp());
+
+		foreach ($carteirasInvestimento->operacoes_financeiras as $operacao) {
+			$fundo_id = $operacao['cnpj_fundo_id'];
+
+			foreach ($datas_totais as $data) {
+				$balanco_fundo[$data][$fundo_id] = 0;
+				$rentabilidade_fundo[$data][$fundo_id] = 0;
+			}
+
+			$busca_rentabilidade = $this->CarteirasInvestimentos->OperacoesFinanceiras->CnpjFundos->DocInfDiarioFundos->find('all',
+		 		['order' => ['DT_COMPTC' => 'ASC']])->where(['cnpj_fundo_id' => $fundo_id, 'DT_COMPTC >=' => $primeira_data_carteira]);				
+
+			foreach ($busca_rentabilidade as $busca) {
+				$data = date('d/m/Y', $busca['DT_COMPTC']->getTimestamp());
+				$rentabilidade_fundo[$data][$fundo_id] = $busca['rentab_diaria'];
+			}
+		}
 				
-		foreach ($carteirasInvestimento->operacoes_financeiras as $operacoes) :
+		foreach ($carteirasInvestimento->operacoes_financeiras as $operacao) :
 
-			$id_fundo_unique[] = $operacoes->cnpj_fundo_id;
+			$id_fundo_unique[] = $operacao->cnpj_fundo_id;
 
-			$auxiliar_data = (string) $operacoes->data;
-			$auxiliar_fundo = $operacoes->cnpj_fundo_id;
-			$valor_total = $operacoes["valor_total"];
+			$auxiliar_data = (string) $operacao->data;
+			$auxiliar_fundo = $operacao->cnpj_fundo_id;
+			$valor_total = $operacao["valor_total"];
 
 			// se a operacao eh de deposito acrescenta, outros tipos diminui
-			if ($tipo_de_operacao[$operacoes['tipo_operacoes_financeira_id']] == 1) {
+			if ($tipo_de_operacao[$operacao['tipo_operacoes_financeira_id']] == 1) {
 				$balanco_fundo[$auxiliar_data][$auxiliar_fundo] += $valor_total;
 			} else {
 				$balanco_fundo[$auxiliar_data][$auxiliar_fundo] -= $valor_total;
@@ -173,20 +183,6 @@ class CarteirasInvestimentosController extends AppController {
 
 		$id_fundo_unique = array_unique($id_fundo_unique);
 
-		$primeira_data_carteira = $this->calcula_primeira_data($carteirasInvestimento);
-		$primeira_data_format = date('Y/m/d', $primeira_data_carteira->getTimestamp());
-
-		// busca rentabilidade		
-		foreach ($id_fundo_unique as $fundo_id) {				
-			$busca_rentabilidade = $this->CarteirasInvestimentos->OperacoesFinanceiras->CnpjFundos->DocInfDiarioFundos->find('all',
-		 		['order' => ['DT_COMPTC' => 'ASC']])->where(['cnpj_fundo_id' => $fundo_id, 'DT_COMPTC >=' => $primeira_data_format]);				
-
-			foreach ($busca_rentabilidade as $busca) {
-				$data = date('d/m/Y', $busca['DT_COMPTC']->getTimestamp());
-				$rentabilidade_fundo[$data][$fundo_id] = $busca['rentab_diaria'];
-			}
-		}
-
 		$rendimento_dia[] = 0;
 		$data_anterior = '';
 
@@ -194,7 +190,8 @@ class CarteirasInvestimentosController extends AppController {
 		foreach ($datas_totais as $data) {
 			foreach ($id_fundo_unique as $fundo_id) {
 				$rendimento_dia[$data][$fundo_id] = $balanco_fundo[$data_anterior][$fundo_id] * $rentabilidade_fundo[$data][$fundo_id];
-				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia[$data][$fundo_id];
+				$balanco_fundo[$data][$fundo_id] += $balanco_fundo[$data_anterior][$fundo_id] + $rendimento_dia[$data][$fundo_id];		
+				
 			}
 			$data_anterior = $data;
 		}
